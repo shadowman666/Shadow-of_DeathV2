@@ -3,17 +3,17 @@ import pygame
 from pygame import Surface, Rect
 from pygame.font import Font
 from codigo.constantes import (LARGURA_TELA, ALTURA_TELA, COR_VERMELHA,
-                               COR_BRANCA, COR_CINZA, COR_PRETA, OPCOES_MENU)
+                               COR_BRANCA, COR_CINZA, COR_PRETA, COR_VERDE, OPCOES_MENU)
 
 
 class Menu:
     def __init__(self, janela: Surface):
         self.janela = janela
-        # Tenta carregar a imagem de fundo do menu
+
         try:
             self.superficie = pygame.image.load('./asset/MenuBg.png').convert_alpha()
             self.superficie = pygame.transform.scale(self.superficie, (LARGURA_TELA, ALTURA_TELA))
-        except (FileNotFoundError, pygame.error):  # <--- CORREÇÃO AQUI
+        except pygame.error:
             self.superficie = Surface((LARGURA_TELA, ALTURA_TELA))
             self.superficie.fill(COR_PRETA)
 
@@ -22,27 +22,33 @@ class Menu:
     def executar(self):
         opcao_menu = 0
 
-        # Tenta iniciar a musica de fundo do menu
         try:
-            pygame.mixer_music.load('./asset/Menu.mp3')
+            pygame.mixer_music.load('./asset/Menu.wav')
             pygame.mixer_music.play(-1)
-        except (FileNotFoundError, pygame.error):  # <--- CORREÇÃO AQUI
+        except pygame.error:
             pass
 
         while True:
             self.janela.blit(source=self.superficie, dest=self.retangulo)
 
+            # Assinatura do dev
+            self.texto_menu(15, "Dev by RU 712999 - Carlos Henrique Lavratti", COR_VERDE, ((LARGURA_TELA / 2), 50))
+
+            # Titulos principais
             self.texto_menu(70, "Shadow", COR_VERMELHA, ((LARGURA_TELA / 2), 100))
             self.texto_menu(70, "of Death", COR_VERMELHA, ((LARGURA_TELA / 2), 160))
 
+            # Renderizacao das opcoes do menu
             for i in range(len(OPCOES_MENU)):
+                pos_y = 280 + 45 * i
                 if i == opcao_menu:
-                    self.texto_menu(30, OPCOES_MENU[i], COR_VERMELHA, ((LARGURA_TELA / 2), 300 + 40 * i))
+                    self.texto_menu(30, OPCOES_MENU[i], COR_VERMELHA, ((LARGURA_TELA / 2), pos_y))
                 else:
-                    self.texto_menu(30, OPCOES_MENU[i], COR_BRANCA, ((LARGURA_TELA / 2), 300 + 40 * i))
+                    self.texto_menu(30, OPCOES_MENU[i], COR_BRANCA, ((LARGURA_TELA / 2), pos_y))
 
-            instrucoes = "CONTROLES: W A S D - Mover | L - Atirar"
-            self.texto_menu(20, instrucoes, COR_CINZA, ((LARGURA_TELA / 2), ALTURA_TELA - 30))
+            # Descricao de controles no rodape
+            instrucoes_rodape = "CONTROLES RAPIDOS: W A S D - Mover | L - Atirar"
+            self.texto_menu(20, instrucoes_rodape, COR_CINZA, ((LARGURA_TELA / 2), ALTURA_TELA - 30))
 
             pygame.display.flip()
 

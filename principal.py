@@ -1,4 +1,3 @@
-import sys
 import pygame
 from codigo.jogo import Jogo
 

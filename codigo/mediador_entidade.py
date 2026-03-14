@@ -10,17 +10,21 @@ from codigo.tiro_inimigo import TiroInimigo
 class MediadorEntidade:
 
     @staticmethod
-    def __tocar_som(caminho_som: str):
+    def __tocar_som(caminho_som: str, id_canal: int = -1):
+        # Tenta tocar o efeito sonoro em wav e avisa no console se falhar
         try:
             som = pygame.mixer.Sound(caminho_som)
-            som.play()
-        except (FileNotFoundError, pygame.error):
-            pass
+            if id_canal != -1:
+                # Usa um canal especifico para impedir que o som fique sobreposto e alto
+                pygame.mixer.Channel(id_canal).play(som)
+            else:
+                # Toca em qualquer canal livre
+                som.play()
+        except Exception as erro_som:
+            print(f"Aviso - Falha ao tocar o som {caminho_som}: {erro_som}")
 
     @staticmethod
     def __verificar_colisao_janela(entidade):
-        # Inimigos não morrem mais ao sair da tela, pois nascem fora dela.
-        # Apenas tiros perdidos sao destruidos ao sair da visao para poupar memoria.
         if isinstance(entidade, (TiroJogador, TiroInimigo)):
             if (entidade.retangulo.right <= 0 or entidade.retangulo.left >= LARGURA_TELA or
                     entidade.retangulo.bottom <= 0 or entidade.retangulo.top >= ALTURA_TELA):
@@ -49,15 +53,17 @@ class MediadorEntidade:
                     ent1.retangulo.bottom >= ent2.retangulo.top and
                     ent1.retangulo.top <= ent2.retangulo.bottom):
 
+                # Aplica o dano cruzado
                 ent1.vida -= ent2.dano
                 ent2.vida -= ent1.dano
                 ent1.ultimo_dano = ent2.nome
                 ent2.ultimo_dano = ent1.nome
 
-                if isinstance(ent1, Jogador) or isinstance(ent2, Jogador):
-                    MediadorEntidade.__tocar_som('./asset/dano_jogador.mp3')
-                if isinstance(ent1, (Inimigo, Chefao)) or isinstance(ent2, (Inimigo, Chefao)):
-                    MediadorEntidade.__tocar_som('./asset/dano_monstro.mp3')
+                # Toca o dano APENAS do Jogador no Canal 0
+                if isinstance(ent1, Jogador) and ent1.vida > 0:
+                    MediadorEntidade.__tocar_som('./asset/dano_jogador.wav', id_canal=0)
+                elif isinstance(ent2, Jogador) and ent2.vida > 0:
+                    MediadorEntidade.__tocar_som('./asset/dano_jogador.wav', id_canal=0)
 
     @staticmethod
     def __dar_pontuacao(inimigo, lista_entidades: list):
@@ -79,10 +85,21 @@ class MediadorEntidade:
     def verificar_vida(lista_entidades: list):
         for entidade in lista_entidades.copy():
             if entidade.vida <= 0:
-                if isinstance(entidade, (Inimigo, Chefao)):
+
+                # Trata a morte do Zumbi (Inimigo comum)
+                if isinstance(entidade, Inimigo):
                     MediadorEntidade.__dar_pontuacao(entidade, lista_entidades)
-                    MediadorEntidade.__tocar_som('./asset/morte_monstro.mp3')
+                    MediadorEntidade.__tocar_som('./asset/morte_monstro.wav', id_canal=1)
+
+                # Trata a morte do Chefao com um som exclusivo
+                elif isinstance(entidade, Chefao):
+                    MediadorEntidade.__dar_pontuacao(entidade, lista_entidades)
+                    MediadorEntidade.__tocar_som('./asset/morte_chefao.wav', id_canal=1)
+
+                # Trata a morte do Jogador
                 elif isinstance(entidade, Jogador):
-                    MediadorEntidade.__tocar_som('./asset/morte_jogador.mp3')
+                    # Puxa o freio de emergencia para silenciar a arena
+                    pygame.mixer.stop()
+                    MediadorEntidade.__tocar_som('./asset/morte_jogador.wav', id_canal=0)
 
                 lista_entidades.remove(entidade)

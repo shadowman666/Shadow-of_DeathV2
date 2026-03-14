@@ -13,7 +13,7 @@ COR_AMARELA = (255, 255, 128)
 COR_VERDE = (0, 255, 0)
 
 # Opcoes disponiveis no menu inicial
-OPCOES_MENU = ('NOVO JOGO', 'PONTUACAO', 'SAIR')
+OPCOES_MENU = ('NOVO JOGO', 'CONTROLES', 'PONTUACAO', 'SAIR')
 
 # Teclas de controle do jogador
 TECLA_CIMA = pygame.K_w
@@ -32,7 +32,7 @@ VELOCIDADE = {
 
 # Configuracoes de vida das entidades
 VIDA = {
-    'Jogador': 300,
+    'Jogador': 1000,
     'TiroJogador': 1,
     'Zumbi': 60,
     'Chefao': 2500
@@ -40,10 +40,10 @@ VIDA = {
 
 # Configuracoes de dano causado ao encostar
 DANO = {
-    'Jogador': 1,
+    'Jogador': 0,
     'TiroJogador': 20,
-    'Zumbi': 15,
-    'Chefao': 40
+    'Zumbi': 2,
+    'Chefao': 5
 }
 
 # Configuracoes de pontuacao ao derrotar o inimigo

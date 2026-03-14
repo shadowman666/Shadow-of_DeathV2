@@ -15,30 +15,69 @@ class Pontuacao:
         try:
             self.superficie = pygame.image.load('./asset/ScoreBg.png').convert_alpha()
             self.superficie = pygame.transform.scale(self.superficie, (LARGURA_TELA, ALTURA_TELA))
-        except (FileNotFoundError, pygame.error):  # <--- CORREÇÃO AQUI
+        except pygame.error:
             self.superficie = Surface((LARGURA_TELA, ALTURA_TELA))
             self.superficie.fill((0, 0, 0))
 
         self.retangulo = self.superficie.get_rect(left=0, top=0)
 
-    def salvar(self, modo_jogo: str, pontos_jogador: list[int]):
+    def salvar(self, _modo_jogo: str, pontos_jogador: list[int], vitoria: bool = True):
+        # Gerenciamento de audio: Score.wav para vitoria e GameOver.wav para derrota
         try:
-            pygame.mixer_music.load('./asset/Score.mp3')
+            pygame.mixer_music.stop()
+            musica_final = './asset/Score.wav' if vitoria else './asset/GameOver.wav'
+            pygame.mixer_music.load(musica_final)
+            pygame.mixer_music.set_volume(1.0)
             pygame.mixer_music.play(-1)
-        except (FileNotFoundError, pygame.error):  # <--- CORREÇÃO AQUI
+        except pygame.error:
             pass
 
         banco_proxy = BancoProxy('BancoPontuacao')
         nome_jogador = ''
+        pontos = pontos_jogador[0]
+
+        titulo = 'VITORIA!!' if vitoria else 'FIM DE JOGO'
+        cor_titulo = COR_AMARELA if vitoria else (255, 0, 0)
+
+        # Selecao de fundo baseada no resultado
+        if vitoria:
+            fundo_atual = self.superficie
+        else:
+            try:
+                fundo_atual = pygame.image.load('./asset/GameOverBg.png').convert_alpha()
+                fundo_atual = pygame.transform.scale(fundo_atual, (LARGURA_TELA, ALTURA_TELA))
+            except pygame.error:
+                fundo_atual = Surface((LARGURA_TELA, ALTURA_TELA))
+                fundo_atual.fill((0, 0, 0))
+
+        retangulo_fundo = fundo_atual.get_rect(left=0, top=0)
 
         while True:
-            self.janela.blit(source=self.superficie, dest=self.retangulo)
-            self.texto_pontuacao(48, 'VITORIA!!', COR_AMARELA, POSICAO_PONTUACAO['Titulo'])
+            if vitoria:
+                # Mantem a logica e as posicoes originais para a tela de vitoria
+                self.janela.blit(source=fundo_atual, dest=retangulo_fundo)
+                self.texto_pontuacao(48, titulo, cor_titulo, POSICAO_PONTUACAO['Titulo'])
 
-            instrucao = 'Digite seu nome (4 letras) e de ENTER:'
-            pontos = pontos_jogador[0]
+                posicao_demo = (POSICAO_PONTUACAO['Titulo'][0], POSICAO_PONTUACAO['Titulo'][1] + 60)
+                self.texto_pontuacao(25, "OBRIGADO POR JOGAR ESTA DEMO!!!", (0, 255, 0), posicao_demo)
 
-            self.texto_pontuacao(20, instrucao, COR_BRANCA, POSICAO_PONTUACAO['InserirNome'])
+                self.texto_pontuacao(20, 'Digite seu nome (4 letras) e de ENTER:', COR_BRANCA,
+                                     POSICAO_PONTUACAO['InserirNome'])
+                self.texto_pontuacao(30, nome_jogador, COR_BRANCA, POSICAO_PONTUACAO['Nome'])
+
+            else:
+                # Aplica a limpeza de tela e coordenadas fixas apenas para o fim de jogo (morte)
+                self.janela.fill((0, 0, 0))
+                self.janela.blit(source=fundo_atual, dest=retangulo_fundo)
+
+                self.texto_pontuacao(48, titulo, cor_titulo, POSICAO_PONTUACAO['Titulo'])
+
+                posicao_demo = (POSICAO_PONTUACAO['Titulo'][0], POSICAO_PONTUACAO['Titulo'][1] + 60)
+                self.texto_pontuacao(25, "OBRIGADO POR JOGAR ESTA DEMO!!!", (0, 255, 0), posicao_demo)
+
+                self.texto_pontuacao(22, f'PONTUACAO FINAL: {pontos}', COR_BRANCA, (LARGURA_TELA / 2, 350))
+                self.texto_pontuacao(20, 'Digite seu nome (4 letras) e de ENTER:', COR_BRANCA, (LARGURA_TELA / 2, 400))
+                self.texto_pontuacao(40, nome_jogador, COR_AMARELA, (LARGURA_TELA / 2, 460))
 
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
@@ -54,19 +93,20 @@ class Pontuacao:
                         nome_jogador = nome_jogador[:-1]
                     else:
                         if len(nome_jogador) < 4:
-                            nome_jogador += evento.unicode.upper()
+                            if evento.unicode.isalnum():
+                                nome_jogador += evento.unicode.upper()
 
-            self.texto_pontuacao(30, nome_jogador, COR_BRANCA, POSICAO_PONTUACAO['Nome'])
             pygame.display.flip()
 
     def mostrar(self):
         try:
-            pygame.mixer_music.load('./asset/Score.mp3')
+            pygame.mixer_music.load('./asset/Score.wav')
             pygame.mixer_music.play(-1)
-        except (FileNotFoundError, pygame.error):  # <--- CORREÇÃO AQUI
+        except pygame.error:
             pass
 
         self.janela.blit(source=self.superficie, dest=self.retangulo)
+
         self.texto_pontuacao(48, 'TOP 10 PONTUACOES', COR_AMARELA, POSICAO_PONTUACAO['Titulo'])
         self.texto_pontuacao(20, 'NOME     PONTOS          DATA      ', COR_AMARELA, POSICAO_PONTUACAO['Rotulo'])
 
@@ -74,11 +114,13 @@ class Pontuacao:
         lista_pontuacoes = banco_proxy.recuperar_top10()
         banco_proxy.fechar()
 
+        cor_dados = (0, 255, 255)
+
         for pontuacao in lista_pontuacoes:
             id_banco, nome, pontos, data = pontuacao
             texto_linha = f'{nome}     {pontos:05d}           {data}'
             indice_posicao = lista_pontuacoes.index(pontuacao)
-            self.texto_pontuacao(20, texto_linha, COR_AMARELA, POSICAO_PONTUACAO[indice_posicao])
+            self.texto_pontuacao(20, texto_linha, cor_dados, POSICAO_PONTUACAO[indice_posicao])
 
         while True:
             for evento in pygame.event.get():
@@ -86,7 +128,7 @@ class Pontuacao:
                     pygame.quit()
                     sys.exit()
                 if evento.type == KEYDOWN:
-                    if evento.key == K_ESCAPE:
+                    if evento.key in [K_ESCAPE, K_RETURN]:
                         return
             pygame.display.flip()
 
