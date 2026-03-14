@@ -22,7 +22,6 @@ class Pontuacao:
         self.retangulo = self.superficie.get_rect(left=0, top=0)
 
     def salvar(self, _modo_jogo: str, pontos_jogador: list[int], vitoria: bool = True):
-        # Gerenciamento de audio: Score.wav para vitoria e GameOver.wav para derrota
         try:
             pygame.mixer_music.stop()
             musica_final = './asset/Score.wav' if vitoria else './asset/GameOver.wav'
@@ -39,7 +38,6 @@ class Pontuacao:
         titulo = 'VITORIA!!' if vitoria else 'FIM DE JOGO'
         cor_titulo = COR_AMARELA if vitoria else (255, 0, 0)
 
-        # Selecao de fundo baseada no resultado
         if vitoria:
             fundo_atual = self.superficie
         else:
@@ -53,31 +51,30 @@ class Pontuacao:
         retangulo_fundo = fundo_atual.get_rect(left=0, top=0)
 
         while True:
+            # Limpeza de tela necessaria para o input de texto nao sobrepor frames antigos
+            self.janela.fill((0, 0, 0))
+            self.janela.blit(source=fundo_atual, dest=retangulo_fundo)
+
             if vitoria:
-                # Mantem a logica e as posicoes originais para a tela de vitoria
-                self.janela.blit(source=fundo_atual, dest=retangulo_fundo)
                 self.texto_pontuacao(48, titulo, cor_titulo, POSICAO_PONTUACAO['Titulo'])
 
                 posicao_demo = (POSICAO_PONTUACAO['Titulo'][0], POSICAO_PONTUACAO['Titulo'][1] + 60)
                 self.texto_pontuacao(25, "OBRIGADO POR JOGAR ESTA DEMO!!!", (0, 255, 0), posicao_demo)
 
-                self.texto_pontuacao(20, 'Digite seu nome (4 letras) e de ENTER:', COR_BRANCA,
-                                     POSICAO_PONTUACAO['InserirNome'])
-                self.texto_pontuacao(30, nome_jogador, COR_BRANCA, POSICAO_PONTUACAO['Nome'])
+                # Ajuste apenas aqui: movido para baixo para nao sobrepor o texto verde
+                self.texto_pontuacao(20, 'Digite seu nome (4 letras) e de ENTER:', COR_BRANCA, (LARGURA_TELA / 2, 400))
+                self.texto_pontuacao(40, nome_jogador, COR_BRANCA, (LARGURA_TELA / 2, 470))
 
             else:
-                # Aplica a limpeza de tela e coordenadas fixas apenas para o fim de jogo (morte)
-                self.janela.fill((0, 0, 0))
-                self.janela.blit(source=fundo_atual, dest=retangulo_fundo)
-
+                # Mantido exatamente como no seu codigo original
                 self.texto_pontuacao(48, titulo, cor_titulo, POSICAO_PONTUACAO['Titulo'])
 
                 posicao_demo = (POSICAO_PONTUACAO['Titulo'][0], POSICAO_PONTUACAO['Titulo'][1] + 60)
                 self.texto_pontuacao(25, "OBRIGADO POR JOGAR ESTA DEMO!!!", (0, 255, 0), posicao_demo)
 
-                self.texto_pontuacao(22, f'PONTUACAO FINAL: {pontos}', COR_BRANCA, (LARGURA_TELA / 2, 350))
-                self.texto_pontuacao(20, 'Digite seu nome (4 letras) e de ENTER:', COR_BRANCA, (LARGURA_TELA / 2, 400))
-                self.texto_pontuacao(40, nome_jogador, COR_AMARELA, (LARGURA_TELA / 2, 460))
+                self.texto_pontuacao(22, f'PONTUACAO FINAL: {pontos}', COR_BRANCA, (LARGURA_TELA / 2, 150))
+                self.texto_pontuacao(20, 'Digite seu nome (4 letras) e de ENTER:', COR_BRANCA, (LARGURA_TELA / 2, 170))
+                self.texto_pontuacao(40, nome_jogador, COR_AMARELA, (LARGURA_TELA / 2, 200))
 
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:

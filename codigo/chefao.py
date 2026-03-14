@@ -14,7 +14,7 @@ class Chefao(Entidade):
 
         # Atributos exclusivos do corpo do Chefao
         self.velocidade_chefao = 2
-        self.dano = 1  # Garante que encostar nele tira a sua vida!
+        self.dano = 10  # Garante que encostar nele tira a sua vida!
 
         self.imagem_original = self.superficie
 

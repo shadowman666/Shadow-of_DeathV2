@@ -9,7 +9,7 @@ class TiroInimigo(Entidade):
 
         # Atributos exclusivos do Tiro do Chefao (Gosma)
         self.velocidade_tiro = 7  # Pode aumentar se quiser a gosma mais rapida
-        self.dano = 1  # Garante que a gosma arranca a sua vida!
+        self.dano = 10  # Garante que a gosma arranca a sua vida!
 
         self.direcao_x = 0
         self.direcao_y = 1
